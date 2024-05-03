@@ -21,9 +21,6 @@ int main(int argc, char **argv) {
   std::wstring removed = stopword_remove(wdata_string);
   std::string removedUTF8String = converter.to_bytes(removed);
 
-  std::ofstream output_file("output/" + std::string(argv[0]) +
-                            "stopword_removed");
-
   std::cout << removedUTF8String << "\n";
   return 0;
 }

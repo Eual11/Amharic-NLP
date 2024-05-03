@@ -14,11 +14,16 @@ std::u32string wstring_to_u32string(const std::wstring &wstr) {
   }
   return u32str;
 }
+std::string u32string_to_string(const std::u32string &u32str) {
+  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+
+  std::string outstring = converter.to_bytes(u32str);
+  return outstring;
+}
 
 int main() {
 
   _setmode(_fileno(stdin), _O_WTEXT);
-  _setmode(_fileno(stdout), _O_WTEXT);
 
   std::wcout << L"Type String: ";
   std::wstring inputString;
@@ -27,19 +32,19 @@ int main() {
   std::wcout << "size of wchar_t is " << sizeof(wchar_t) << "\n";
   std::wcout << inputString << std::endl;
 
-  _setmode(_fileno(stdout), _O_TEXT);
-  std::cout << "hey" << std::endl;
   std::u32string codepoitns = wstring_to_u32string(inputString);
 
-  std::wregex pattern(L"ሰው");
-
-  if (std::regex_match(inputString, pattern)) {
-    std::cout << "man\n";
-  }
   constexpr int size = sizeof(codepoitns) / sizeof(char32_t);
 
-  for (int i = 0; i < size && codepoitns[i]; i++)
-    std::cout << "U+" << std::hex << static_cast<unsigned int>(codepoitns[i]);
+  std::string str(codepoitns.begin(), codepoitns.end());
+  std::system("chcp 65001");
 
+  for (int i = 0; i < size && codepoitns[i]; i++)
+    std::cout << "U+" << std::hex << static_cast<unsigned int>(codepoitns[i])
+              << " ";
+  std::cout << std::endl;
+
+  str = u32string_to_string(codepoitns);
+  std::cout << str << std::endl;
   return 0;
 }
