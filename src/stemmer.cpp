@@ -73,6 +73,10 @@ int main() {
 
   _setmode(_fileno(stdout), _O_WTEXT);
 
+  // ተሰጥኦው
+  // Test Failed ተሰጥኦው != ተሰጦው was decomposed to [ትኧስኧጥኦው]
+  //  Test Failed ተሟጋች != ተምሟጋች was decomposed to [ትኧምሟግኣች]
+  //  Test Failed አግኝቷል. != አግኝትቷል. was decomposed to [እኧግኝትቷል-ኦ]
   testDecompose();
   return 0;
 }
@@ -84,6 +88,8 @@ bool isVowel(const char32_t ch) {
   unsigned int character_col = codepoint % 16; // 0xabce -> 0xe
   //
 
+  if (character_col == 5)
+    return false;
   if (character_row == 0x12A &&
       (character_col == 7 || (character_col >= 1 && character_col <= 6)))
     return true;
@@ -237,12 +243,16 @@ std::wstring composeStringSyllables(const std::wstring &str) {
     if (i >= str.length())
       break;
     char32_t ch = u32str[i];
+
+    /* std::wcout << static_cast<wchar_t>(ch) << "\n"; */
     if (isConsonant(ch)) {
 
       if (i + 1 < str.length()) {
         uint32_t nextch = u32str[i + 1];
         if (isVowel(nextch)) {
 
+          /* std::wcout << static_cast<wchar_t>(ch) << " " */
+          /* << static_cast<wchar_t>(nextch) << " \n"; */
           auto getVowelIndex = [](char32_t ch) {
             char32_t amharic_vowels[] = {U'ኧ', U'ኡ', U'ኢ', U'ኣ',
                                          U'ኤ', U'እ', U'ኦ'};
@@ -264,6 +274,8 @@ std::wstring composeStringSyllables(const std::wstring &str) {
           composedString += syllabel;
           i++;
           // contniue processig
+        } else {
+          composedString += static_cast<wchar_t>(ch);
         }
       } else {
         composedString += static_cast<wchar_t>(ch);
@@ -271,6 +283,7 @@ std::wstring composeStringSyllables(const std::wstring &str) {
       //
     } else if (isVowel(ch)) {
       composedString += static_cast<wchar_t>(ch);
+
       //
     } else {
       composedString += static_cast<wchar_t>(ch);
