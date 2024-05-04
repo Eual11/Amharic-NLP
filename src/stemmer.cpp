@@ -1,5 +1,6 @@
 #include <codecvt>
 #include <fcntl.h>
+#include <float.h>
 #include <fstream>
 #include <io.h>
 #include <ios>
@@ -23,7 +24,7 @@ bool isCombiningMark(const char32_t ch);
 bool isReserved(const char32_t ch); // used for reserverd codepoints in the
                                     // first ethiopic block
 bool isPunctuation(const char32_t ch);
-
+bool isDerivateSyllable(const char32_t ch);
 char32_t getSyllableConsonant(const char32_t ch);
 char32_t getSyllableVowel(const char32_t ch);
 std::wstring decomposeSyllable(const char32_t ch);
@@ -73,12 +74,21 @@ int main() {
 
   _setmode(_fileno(stdout), _O_WTEXT);
 
+  testDecompose();
+  return 0;
+#if 0
+  std::wstring word = L"ሇ";
+  std::wstring decomposed = decomposeStringSyllables(word);
+  std::wstring composed = composeStringSyllables(decomposed);
+
+  std::wcout << " Test Failed " << word << " != " << composed
+             << " was decomposed to [" << decomposed << "]\n";
+
   // ተሰጥኦው
   // Test Failed ተሰጥኦው != ተሰጦው was decomposed to [ትኧስኧጥኦው]
   //  Test Failed ተሟጋች != ተምሟጋች was decomposed to [ትኧምሟግኣች]
   //  Test Failed አግኝቷል. != አግኝትቷል. was decomposed to [እኧግኝትቷል-ኦ]
-  testDecompose();
-  return 0;
+#endif
 }
 
 bool isVowel(const char32_t ch) {
@@ -192,7 +202,18 @@ std::wstring decomposeSyllable(const char32_t ch) {
     std::wstring decomposed{static_cast<wchar_t>(ch)};
     return decomposed;
   }
+  if (isDerivateSyllable(ch)) {
+    // the consonant and vowel form for derivate syllabel is different from the
+    // regular ones the consonant remains the sadis letter but the vowel is the
+    // letter ዋ
+    char32_t consonant = getSyllableConsonant(ch);
+    char32_t vowel = U'ዋ';
+    std::wstring decomposed{static_cast<wchar_t>(consonant),
+                            static_cast<wchar_t>(vowel)};
+    return decomposed;
+  }
 
+  // han
   char32_t consonant = getSyllableConsonant(ch);
   char32_t vowel = getSyllableVowel(ch);
   if (consonant != vowel) {
@@ -274,6 +295,22 @@ std::wstring composeStringSyllables(const std::wstring &str) {
           composedString += syllabel;
           i++;
           // contniue processig
+        } else if (nextch == U'ዋ') {
+          // handing derivate sounds like ሟ
+          uint32_t codepoint = static_cast<uint32_t>(ch);
+          uint32_t character_col = codepoint % 16;
+
+          if (character_col > 8) {
+            codepoint -= character_col;
+            codepoint += 0xF;
+            composedString += static_cast<wchar_t>(codepoint);
+          } else {
+            codepoint -= character_col;
+            codepoint += 0x7;
+            composedString += static_cast<wchar_t>(codepoint);
+          }
+
+          i++;
         } else {
           composedString += static_cast<wchar_t>(ch);
         }
@@ -304,4 +341,19 @@ std::vector<std::wstring> splitWString(const std::wstring &str,
     words.push_back(token);
   }
   return words;
+}
+
+bool isDerivateSyllable(const char32_t ch) {
+  if (!isSyllable(ch))
+    return false;
+  if (isVowel(ch))
+    return false;
+  if (isConsonant(ch))
+    return false;
+  uint32_t codepoint = static_cast<uint32_t>(ch);
+
+  uint32_t character_col = codepoint % 16;
+  if (character_col % 8 == 7)
+    return true;
+  return false;
 }
