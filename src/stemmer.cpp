@@ -5,7 +5,9 @@
 #include <io.h>
 #include <ios>
 #include <iostream>
+#include <istream>
 #include <locale>
+#include <regex>
 #include <sstream>
 #include <stdint.h>
 #include <string>
@@ -29,6 +31,7 @@ char32_t getSyllableConsonant(const char32_t ch);
 char32_t getSyllableVowel(const char32_t ch);
 std::wstring decomposeSyllable(const char32_t ch);
 
+std::wstring wstring_stem(const std::wstring &wstr);
 std::u32string wstring_to_u32string(const std::wstring &wstr);
 std::wstring decomposeStringSyllables(const std::wstring &str);
 std::wstring composeStringSyllables(const std::wstring &str);
@@ -58,37 +61,35 @@ void testDecompose() {
 
   std::vector<std::wstring> words = splitWString(wstr, ' ');
 
+  int testsPassed = 0;
+  int testsFailed = 0;
   for (const auto &word : words) {
     std::wstring decomposed = decomposeStringSyllables(word);
     std::wstring composed = composeStringSyllables(decomposed);
 
     if (composed == word) {
       std::wcout << " Test Passed " << word << " = " << composed << "\n";
+      testsPassed++;
     } else {
       std::wcout << " Test Failed " << word << " != " << composed
                  << " was decomposed to [" << decomposed << "]\n";
+      testsFailed++;
     }
   }
+  std::wcout << testsPassed << " Tests Passed \n"
+             << testsFailed << " Tests Failed";
 }
 int main() {
 
   _setmode(_fileno(stdout), _O_WTEXT);
 
-  testDecompose();
+  std::wcout << "Input Word to detach: ";
+  std::wstring inputWord = L"ልጅቷ";
+
+  std::wcout << "Stem String: " << wstring_stem(inputWord)
+             << " was decomposed to " << decomposeStringSyllables(inputWord)
+             << std::endl;
   return 0;
-#if 0
-  std::wstring word = L"ሇ";
-  std::wstring decomposed = decomposeStringSyllables(word);
-  std::wstring composed = composeStringSyllables(decomposed);
-
-  std::wcout << " Test Failed " << word << " != " << composed
-             << " was decomposed to [" << decomposed << "]\n";
-
-  // ተሰጥኦው
-  // Test Failed ተሰጥኦው != ተሰጦው was decomposed to [ትኧስኧጥኦው]
-  //  Test Failed ተሟጋች != ተምሟጋች was decomposed to [ትኧምሟግኣች]
-  //  Test Failed አግኝቷል. != አግኝትቷል. was decomposed to [እኧግኝትቷል-ኦ]
-#endif
 }
 
 bool isVowel(const char32_t ch) {
@@ -265,15 +266,12 @@ std::wstring composeStringSyllables(const std::wstring &str) {
       break;
     char32_t ch = u32str[i];
 
-    /* std::wcout << static_cast<wchar_t>(ch) << "\n"; */
     if (isConsonant(ch)) {
 
       if (i + 1 < str.length()) {
         uint32_t nextch = u32str[i + 1];
         if (isVowel(nextch)) {
 
-          /* std::wcout << static_cast<wchar_t>(ch) << " " */
-          /* << static_cast<wchar_t>(nextch) << " \n"; */
           auto getVowelIndex = [](char32_t ch) {
             char32_t amharic_vowels[] = {U'ኧ', U'ኡ', U'ኢ', U'ኣ',
                                          U'ኤ', U'እ', U'ኦ'};
@@ -356,4 +354,71 @@ bool isDerivateSyllable(const char32_t ch) {
   if (character_col % 8 == 7)
     return true;
   return false;
+}
+std::wstring wstring_stem(const std::wstring &wstr) {
+
+  const std::vector<std::wstring> suffix_list = {
+      L"ኦችኣችኧውንንኣ", L"ኦችኣችህኡ", L"ኦችኣችኧውን", L"ኣችኧውንንኣ", L"ኦችኣችኧው", L"ኢዕኧልኧሽ",
+      L"ኦችኣችን",     L"ኣውኢው",   L"ኣችኧውኣል",  L"ችኣት",     L"ችኣችህኡ",  L"ችኣችኧው",
+      L"ኣልኧህኡ",     L"ኣውኦች",   L"ኣልኧህ",    L"ኣልኧሽ",    L"ኣልችህኡ",  L"ኣልኣልኧች",
+      L"ብኣችኧውስ",    L"ብኣችኧው",  L"ኣችኧውን",   L"ኣልኧች",    L"ኣልኧን",   L"ኣልኣችህኡ",
+      L"ኣችህኡን",     L"ኣችህኡ",   L"ኣችህኡት",   L"ውኦችንንኣ",  L"ውኦችን",   L"ኣችኧው",
+      L"ውኦችኡን",     L"ውኦችኡ",   L"ውንኣ",     L"ኦችኡን",    L"ውኦች",    L"ኝኣንኧትም",
+      L"ኝኣንኣ",      L"ኝኣንኧት",  L"ኝኣን",     L"ኝኣውም",    L"ኝኣው",    L"ኣውኣ",
+      L"ብኧትን",      L"ኣችህኡም",  L"ችኣችን",    L"ኦችህ",     L"ኦችሽ",    L"ኦችኡ",
+      L"ኦችኤ",       L"ኦውኣ",    L"ኦቿ",      L"ችው",      L"ችኡ",     L"ኤችኡ",
+      L"ንኧው",       L"ንኧት",    L"ኣልኡ",     L"ኣችን",     L"ክኡም",    L"ክኡት",
+      L"ክኧው",       L"ችን",     L"ችም",      L"ችህ",      L"ችሽ",     L"ችን",
+      L"ችው",        L"ይኡሽን",   L"ይኡሽ",     L"ውኢ",      L"ኦችንንኣ",  L"ኣውኢ",
+      L"ብኧት",       L"ኦች",     L"ኦችኡ",     L"ውኦን",     L"ኝኣ",     L"ኝኣውን",
+      L"ኝኣው",       L"ኦችን",    L"ኣል",      L"ም",       L"ሽው",     L"ክም",
+      L"ኧው",        L"ውኣ",     L"ትም",      L"ውኦ",      L"ውም",     L"ውን",
+      L"ንም",        L"ሽን",     L"ኣች",      L"ኡት",      L"ኢት",     L"ክኡ",
+      L"ኤ",         L"ህ",      L"ሽ",       L"ኡ",       L"ሽ",      L"ክ",
+      L"ች",         L"ኡን",     L"ን",       L"ም",       L"ንኣ",     L"ዋ"};
+
+  const std::vector<std::wstring> prefix_list = {
+      L"ስልኧምኣይ", L"ይኧምኣት", L"ዕንድኧ", L"ይኧትኧ", L"ብኧምኣ", L"ብኧትኧ", L"ዕኧል", L"ስልኧ",
+      L"ምኧስ",    L"ዕይኧ",   L"ይኣል",  L"ስኣት",  L"ስኣን",  L"ስኣይ",  L"ስኣል", L"ይኣስ",
+      L"ይኧ",     L"ልኧ",    L"ብኧ",   L"ክኧ",   L"እን",   L"አል",   L"አስ",  L"ትኧ",
+      L"አት",     L"አን",    L"አይ",   L"ይ",    L"አ",    L"እ"};
+
+  std::wstring wsteam = decomposeStringSyllables(wstr);
+
+  std::wcout << wsteam << "\n";
+  // removing suffixes
+  std::wcout << "////// removing suffixes \n" << std::endl;
+  for (const auto &suffix : suffix_list) {
+    std::wregex pattern(decomposeStringSyllables(suffix) + L"$");
+
+    std::wstring pre_removal_string =
+        wsteam; // holding a copy of wstem before it gets eviscirated
+
+    wsteam = std::regex_replace(wsteam, pattern, L"");
+
+    if (wsteam != pre_removal_string) {
+      std::wcout << "[ " << suffix << " removed"
+                 << "] " << wsteam << std::endl;
+    }
+    if (wsteam.length() <= 1)
+      wsteam = pre_removal_string;
+  }
+
+  std::wcout << "////// removing prefix \n" << std::endl;
+  for (const auto &prefix : prefix_list) {
+    std::wregex pattern(L"^" + decomposeStringSyllables(prefix));
+    std::wstring pre_removal_string =
+        wsteam; // holding a copy of wstem before it gets eviscirated
+
+    wsteam = std::regex_replace(wsteam, pattern, L"");
+
+    if (wsteam != pre_removal_string) {
+      std::wcout << "[ " << prefix << " removed"
+                 << "] " << wsteam << std::endl;
+    }
+    if (wsteam.length() <= 1)
+      wsteam = pre_removal_string;
+  }
+
+  return composeStringSyllables(wsteam);
 }
