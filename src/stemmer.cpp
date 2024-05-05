@@ -31,7 +31,8 @@ char32_t getSyllableConsonant(const char32_t ch);
 char32_t getSyllableVowel(const char32_t ch);
 std::wstring decomposeSyllable(const char32_t ch);
 
-std::wstring wstring_stem(const std::wstring &wstr);
+std::wstring wstring_stem(const std::wstring &wstr, int suffix_level,
+                          int prefix_level);
 std::u32string wstring_to_u32string(const std::wstring &wstr);
 std::wstring decomposeStringSyllables(const std::wstring &str);
 std::wstring composeStringSyllables(const std::wstring &str);
@@ -84,9 +85,10 @@ int main() {
   _setmode(_fileno(stdout), _O_WTEXT);
 
   std::wcout << "Input Word to detach: ";
-  std::wstring inputWord = L"ልጅቷ";
+  std::wstring inputWord = L"ትምርታዊ";
 
-  std::wcout << "Stem String: " << wstring_stem(inputWord)
+  std::wcout << "Stem String: "
+             << wstring_stem(decomposeStringSyllables(inputWord), 1, 1)
              << " was decomposed to " << decomposeStringSyllables(inputWord)
              << std::endl;
   return 0;
@@ -175,7 +177,6 @@ bool isAbukuter(const char32_t ch) { return (isSyllable(ch) || isKuter(ch)); }
 
 char32_t getSyllableConsonant(const char32_t ch) {
 
-  // TODO: needs to handle derivate letters
   if (!isSyllable(ch))
     return ch;
   if (isConsonant(ch))
@@ -355,8 +356,13 @@ bool isDerivateSyllable(const char32_t ch) {
     return true;
   return false;
 }
-std::wstring wstring_stem(const std::wstring &wstr) {
+std::wstring wstring_stem(const std::wstring &wstr, int suffix_level,
+                          int prefix_level) {
 
+  // NOTE: a certain amharic string could match more than one suffix/prefix, the
+  // removal of certain suffix/prefix results in a small dam-lev distance
+  // compared to others, maybe check for each matched suffixe/prefix and add
+  // them to a priority queue based on their dam-lev distance
   const std::vector<std::wstring> suffix_list = {
       L"ኦችኣችኧውንንኣ", L"ኦችኣችህኡ", L"ኦችኣችኧውን", L"ኣችኧውንንኣ", L"ኦችኣችኧው", L"ኢዕኧልኧሽ",
       L"ኦችኣችን",     L"ኣውኢው",   L"ኣችኧውኣል",  L"ችኣት",     L"ችኣችህኡ",  L"ችኣችኧው",
@@ -385,39 +391,48 @@ std::wstring wstring_stem(const std::wstring &wstr) {
 
   std::wstring wsteam = decomposeStringSyllables(wstr);
 
-  std::wcout << wsteam << "\n";
   // removing suffixes
   std::wcout << "////// removing suffixes \n" << std::endl;
   for (const auto &suffix : suffix_list) {
-    std::wregex pattern(decomposeStringSyllables(suffix) + L"$");
-
+    if (!(suffix_level))
+      break;
+    std::wregex pattern(decomposeStringSyllables(suffix) + L"\\b");
     std::wstring pre_removal_string =
         wsteam; // holding a copy of wstem before it gets eviscirated
 
     wsteam = std::regex_replace(wsteam, pattern, L"");
 
     if (wsteam != pre_removal_string) {
-      std::wcout << "[ " << suffix << " removed"
-                 << "] " << wsteam << std::endl;
+      std::wcout << "[ " << decomposeStringSyllables(suffix) << " removed"
+                 << "] " << composeStringSyllables(wsteam) << std::endl;
+      suffix_level--;
     }
-    if (wsteam.length() <= 1)
+    if (wsteam.length() <= 1) {
       wsteam = pre_removal_string;
+      suffix_level++;
+    }
   }
 
   std::wcout << "////// removing prefix \n" << std::endl;
   for (const auto &prefix : prefix_list) {
-    std::wregex pattern(L"^" + decomposeStringSyllables(prefix));
+
+    if (!(prefix_level))
+      break;
+    std::wregex pattern(L"\\b" + decomposeStringSyllables(prefix));
     std::wstring pre_removal_string =
         wsteam; // holding a copy of wstem before it gets eviscirated
 
     wsteam = std::regex_replace(wsteam, pattern, L"");
 
     if (wsteam != pre_removal_string) {
-      std::wcout << "[ " << prefix << " removed"
-                 << "] " << wsteam << std::endl;
+      std::wcout << "[ " << decomposeStringSyllables(prefix) << " removed"
+                 << "] " << composeStringSyllables(wsteam) << std::endl;
+      prefix_level--;
     }
-    if (wsteam.length() <= 1)
+    if (wsteam.length() <= 1) {
       wsteam = pre_removal_string;
+      prefix_level++;
+    }
   }
 
   return composeStringSyllables(wsteam);
