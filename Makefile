@@ -10,3 +10,6 @@ tests:
 	g++ $(CFLAGS) ./src/facet.cpp -o ./build/$@
 stemmer:
 	g++ $(CFLAGS) ./src/stemmer.cpp -o ./build/$@
+wspell:
+	g++ -std=c++17 ./src/wmain.cpp -o  ./build/e -g -Wall -Wextra -Wpedantic
+
