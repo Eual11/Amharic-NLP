@@ -292,6 +292,12 @@ public:
 
     return decomposeStringSyllables(wstr);
   }
+  /**
+   * @brief Checks if a character is a vowel.
+   *
+   * @param ch The character to be checked.
+   * @return True if the character is a vowel, false otherwise.
+   */
   static bool isVowel(const char32_t ch) {
 
     unsigned int codepoint = static_cast<unsigned int>(ch);
@@ -317,6 +323,12 @@ public:
     }
     return u32str;
   }
+  /**
+   * @brief Checks if a character is a digit.
+   *
+   * @param ch The character to be checked.
+   * @return True if the character is a digit, false otherwise.
+   */
   static bool isAhaz(const char32_t ch) {
 
     uint32_t codepoint = static_cast<uint32_t>(ch);
@@ -326,6 +338,12 @@ public:
     return false;
   }
 
+  /**
+   * @brief Checks if a character is a number.
+   *
+   * @param ch The character to be checked.
+   * @return True if the character is a number, false otherwise.
+   */
   static bool isKuter(const char32_t ch) {
 
     uint32_t codepoint = static_cast<uint32_t>(ch);
@@ -334,6 +352,12 @@ public:
       return true;
     return false;
   }
+  /**
+   * @brief Checks if a character is a consonant.
+   *
+   * @param ch The character to be checked.
+   * @return True if the character is a consonant, false otherwise.
+   */
   static bool isConsonant(const char32_t ch) {
     if (isVowel(ch))
       return false;
@@ -349,6 +373,12 @@ public:
 
     return false;
   }
+  /**
+   * @brief Checks if a character is a syllable.
+   *
+   * @param ch The character to be checked.
+   * @return True if the character is a syllable, false otherwise.
+   */
   static bool isSyllable(const char32_t ch) {
 
     if (isKuter(ch) || isCombiningMark(ch) || isPunctuation(ch))
@@ -363,7 +393,12 @@ public:
       return true;
     return false;
   }
-
+  /**
+   * @brief Checks if a character is punctuation.
+   *
+   * @param ch The character to be checked.
+   * @return True if the character is punctuation, false otherwise.
+   */
   static bool isPunctuation(const char32_t ch) {
     uint32_t codepoint = static_cast<uint32_t>(ch);
 
@@ -371,6 +406,13 @@ public:
       return true;
     return false;
   }
+
+  /**
+   * @brief Checks if a character is an abukuter (syllable or number).
+   *
+   * @param ch The character to be checked.
+   * @return True if the character is an abukuter, false otherwise.
+   */
   static bool isAbukuter(const char32_t ch) {
     return (isSyllable(ch) || isKuter(ch));
   }
@@ -445,6 +487,13 @@ public:
     }
     return ch;
   }
+  /**
+   * @brief Decomposes an Amharic string into its building blocks of consonants
+   * and vowels.
+   *
+   * @param str The Amharic string to be decomposed.
+   * @return The decomposed string consisting of consonants and vowels.
+   */
   static std::wstring decomposeStringSyllables(const std::wstring &str) {
     std::u32string u32str = wstring_to_u32string(str);
 
@@ -496,6 +545,13 @@ public:
         std::regex_replace(finalString, std::wregex(L"(\\t|\\s){2,}"), L"$1");
     return finalString;
   }
+  /**
+   * @brief Composes a string by combining individual consonants and vowels into
+   * Amharic syllables.
+   *
+   * @param str The string consisting of individual consonants and vowels.
+   * @return The composed Amharic string with syllables.
+   */
   static std::wstring composeStringSyllables(const std::wstring &str) {
     std::u32string u32str = wstring_to_u32string(str);
 
