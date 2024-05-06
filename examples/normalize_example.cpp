@@ -12,7 +12,12 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  // setting the console output character point to UTF-8 for windows, the
+  // default codepoint might be ascii or anything non-unicode which results in a
+  // huge mess outputing the amharic character
+#ifdef WIN32
   SetConsoleOutputCP(CP_UTF8);
+#endif
   std::fstream data_file(argv[1], std::ios::in | std::ios::binary);
   std::string data_string;
   std::stringstream buffer;

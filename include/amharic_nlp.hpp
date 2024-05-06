@@ -203,15 +203,15 @@ public:
   };
   AmharicNLP() {
 
-#ifdef NLP_ENABLE_SUGGESTION
+#ifdef ALP_ENABLE_SUGGESTION
     std::wcout << "Loading Recovery " << std::endl;
-    recovery.load("./assets/am_frequency_data.txt");
+    suggest.load("./assets/am_frequency_data.txt");
     std::wcout << "Recovery Completed" << std::endl;
 
 #endif
   }
   std::fstream file;
-  WLinSpell recovery;
+  WLinSpell suggest;
   // checks if the given amharic character is vowel or not
   void testDecompose() {
 
@@ -274,7 +274,7 @@ public:
       std::wstring stemmed_word =
           wstring_stem(decomposeStringSyllables(word_to_process), 1, 1);
       std::wcout << word_to_process << "  " << stemmed_word << " "
-                 << recovery.Correct(
+                 << suggest.Correct(
                         wstring_stem(decomposeStringSyllables(word_to_process),
                                      1, 1),
                         2, 1)

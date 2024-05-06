@@ -39,7 +39,7 @@ int main(void) {
       std::wcout << L"\033[33m Stem: " << corrected << std::endl;
     } else {
       std::wcout << L"\033[33m Stem: " << corrected << "\033[32m Suggestion : "
-                 << alp.recovery.Correct(corrected, 2, 1) << std::endl;
+                 << alp.suggest.Correct(corrected, 2, 1) << std::endl;
     }
     std::wcout << L"\033[00m";
     std::wcout << L"Enter Word to Stem: ";
