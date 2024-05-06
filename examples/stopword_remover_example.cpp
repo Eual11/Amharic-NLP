@@ -2,13 +2,22 @@
 #include <fstream>
 #include <ostream>
 #include <sstream>
+#include <windows.h>
 int main(int argc, char **argv) {
 
+  // setting the console output character point to UTF-8 for windows, the
+  // default codepoint might be ascii or anything non-unicode which results in a
+  // huge mess outputing the amharic character
   if (argc != 2) {
     std::cerr << "Usage: " << argv[0] << " [file to remove stop words from]"
               << "\n";
     return 1;
   }
+
+#ifdef WIN32
+  SetConsoleOutputCP(CP_UTF8);
+#endif
+
   amh_nlp::AmharicNLP alp;
   std::fstream data_file(argv[1], std::ios::in | std::ios::binary);
   std::string data_string;
