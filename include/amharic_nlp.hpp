@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
+namespace amh_nlp {
 static bool sortBySecond(const std::pair<std::wstring, int> &a,
                          const std::pair<std::wstring, int> &b) {
   return a.second < b.second;
@@ -37,7 +38,7 @@ sortByThirdDec(const std::pair<std::pair<std::wstring, float>, long long> &a,
   return a.second > b.second;
 }
 
-class Stemmer {
+class AmharicNLP {
 
 public:
   class WLinSpell {
@@ -64,7 +65,7 @@ public:
       while (std::getline(buffer, readline, L'\n')) {
 
         std::wstring word = readline.substr(0, readline.find_first_of(' ', 0));
-        word = Stemmer::decomposeStringSyllables(word);
+        word = AmharicNLP::decomposeStringSyllables(word);
         std::wstring fword =
             readline.substr(readline.find_first_of(' ', 0) + 1);
         try {
@@ -94,9 +95,9 @@ public:
     }
     std::wstring Correct(std::wstring word, const int editDistance) {
       std::wstring result =
-          Correct(Stemmer::decomposeStringSyllables(word), editDistance, 1);
+          Correct(AmharicNLP::decomposeStringSyllables(word), editDistance, 1);
       if (result == L"")
-        return Correct(Stemmer::decomposeStringSyllables(word),
+        return Correct(AmharicNLP::decomposeStringSyllables(word),
                        editDistance + 1, 1);
       return result;
     }
@@ -104,13 +105,14 @@ public:
     std::wstring Correct(std::wstring word, const int editDistance,
                          int verbosity) {
       std::wstring result = L"";
-      if (verbosity == 1 && Dictionary.find(Stemmer::decomposeStringSyllables(
-                                word)) != Dictionary.end()) {
+      if (verbosity == 1 &&
+          Dictionary.find(AmharicNLP::decomposeStringSyllables(word)) !=
+              Dictionary.end()) {
         return word;
       }
 
       // decomposing the word
-      word = Stemmer::decomposeStringSyllables(word);
+      word = AmharicNLP::decomposeStringSyllables(word);
       std::vector<std::pair<std::pair<std::wstring, float>, long long>>
           candidatesVec;
       for (std::pair<std::wstring, int> entry : Dictionary) {
@@ -134,7 +136,7 @@ public:
 
         if (verbosity == 1) {
           auto cand = candidatesVec[0];
-          return Stemmer::composeStringSyllables(cand.first.first);
+          return AmharicNLP::composeStringSyllables(cand.first.first);
         }
 
         std::vector<std::pair<std::pair<std::wstring, float>, long long>>::
@@ -153,13 +155,14 @@ public:
         }
 
         for (auto d : candidatesVec)
-          std::wcout << Stemmer::composeStringSyllables(d.first.first) << L" ";
+          std::wcout << AmharicNLP::composeStringSyllables(d.first.first)
+                     << L" ";
       }
       return L"";
     }
 
   private:
-    friend class Stemmer;
+    friend class AmharicNLP;
     float levenD(const std::wstring &a, const std::wstring &b) {
 
       int N1 = a.length() + 1;
@@ -185,9 +188,9 @@ public:
 
       for (int i = 1; i < N1; i++)
         for (int j = 1; j < N2; j++) {
-          int cost = !(a[i - 1] == b[j - 1]);
-          if (Stemmer::getSyllableConsonant(a[i - 1]) ==
-              Stemmer::getSyllableConsonant(b[j - 1]))
+          int cost = !(a[i - 1] == b[j - 1]) + 1;
+          if (AmharicNLP::getSyllableConsonant(a[i - 1]) ==
+              AmharicNLP::getSyllableConsonant(b[j - 1]))
             cost -= 0.5;
           M[i][j] = lamdaMin(M[i - 1][j] + 1, M[i][j - 1] + 1,
                              M[i - 1][j - 1] + cost);
@@ -198,16 +201,14 @@ public:
       return M[N1 - 1][N2 - 1];
     }
   };
-  Stemmer(std::string input) {
+  AmharicNLP() {
 
-    file = std::fstream("input.txt", std::ios::in | std::ios::binary);
-    if (!file.is_open()) {
-      std::cerr << "Couldn't file " << input << "\n";
-      exit(1);
-    }
+#ifdef NLP_ENABLE_SUGGESTION
     std::wcout << "Loading Recovery " << std::endl;
     recovery.load("./assets/am_frequency_data.txt");
     std::wcout << "Recovery Completed" << std::endl;
+
+#endif
   }
   std::fstream file;
   WLinSpell recovery;
@@ -281,6 +282,16 @@ public:
     }
   }
 
+  std::wstring normalizeString(const std::wstring &wstr) {
+    std::wstring word;
+    for (auto ch : wstr) {
+      if (isSyllable(ch)) {
+        word += ch;
+      }
+    }
+
+    return decomposeStringSyllables(wstr);
+  }
   static bool isVowel(const char32_t ch) {
 
     unsigned int codepoint = static_cast<unsigned int>(ch);
@@ -445,7 +456,46 @@ public:
     }
     return decomposedString;
   }
+  inline std::string wstring_to_string(const std::wstring &wstr) {
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
+    return converter.to_bytes(wstr);
+  }
+  inline std::wstring string_to_wstring(const std::string &str) {
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+
+    return converter.from_bytes(str);
+  }
+  std::vector<std::wstring> stop_word_list = {
+      L"ስለሚሆን", L"እና",     L"ስለዚህ",   L"በመሆኑም", L"ሁሉ",    L"ሆነ",    L"ሌላ",
+      L"ልክ",    L"ስለ",     L"በቀር",    L"ብቻ",    L"ና",     L"አንዳች",  L"አንድ",
+      L"እንደ",   L"እንጂ",    L"ያህል",    L"ይልቅ",   L"ወደ",    L"እኔ",    L"የእኔ",
+      L"ራሴ",    L"እኛ",     L"የእኛ",    L"እራሳችን", L"አንቺ",   L"የእርስዎ", L"ራስህ",
+      L"ራሳችሁ",  L"እሱ",     L"እሱን",    L"የእሱ",   L"ራሱ",    L"እርሷ",   L"የእሷ",
+      L"ራሷ",    L"እነሱ",    L"እነሱን",   L"የእነሱ",  L"እራሳቸው", L"ምንድን",  L"የትኛው",
+      L"ማንን",   L"ይህ",     L"እነዚህ",   L"እነዚያ",  L"ነኝ",    L"ነው",    L"ናቸው",
+      L"ነበር",   L"ነበሩ",    L"ሁን",     L"ነበር",   L"መሆን",   L"አለኝ",   L"አለው",
+      L"ነበረ",   L"መኖር",    L"ያደርጋል",  L"አደረገው", L"መሥራት",  L"እና",    L"ግን",
+      L"ከሆነ",   L"ወይም",    L"ምክንያቱም", L"እንደ",   L"እስከ",   L"ቢሆንም",  L"ጋር",
+      L"ላይ",    L"መካከል",   L"በኩል",    L"ወቅት",   L"በኋላ",   L"ከላይ",   L"በርቷል",
+      L"ጠፍቷል",  L"በላይ",    L"ስር",     L"እንደገና", L"ተጨማሪ",  L"ከዚያ",   L"አንዴ",
+      L"እዚህ",   L"እዚያ",    L"መቼ",     L"የት",    L"እንዴት",  L"ሁሉም",   L"ማናቸውም",
+      L"ሁለቱም",  L"እያንዳንዱ", L"ጥቂቶች",   L"ተጨማሪ",  L"በጣም",   L"ሌላ",    L"አንዳንድ",
+      L"አይ",    L"ወይም",    L"አይደለም",  L"ብቻ",    L"የራስ",   L"ተመሳሳይ", L"ስለዚህ",
+      L"እኔም",   L"በጣም",    L"ይችላል",   L"ይሆናል",  L"በቃ",    L"አሁን",
+  };
+  std::wstring stopword_remove(const std::wstring &srcString) {
+    std::wstring finalString = srcString;
+
+    for (const auto &stopword : stop_word_list) {
+      std::wregex pattern(L"\\b" + stopword + L"\\b");
+      finalString = std::regex_replace(finalString, pattern, L"");
+    }
+    // stripping redundant tabs or spaces
+    finalString =
+        std::regex_replace(finalString, std::wregex(L"(\\t|\\s){2,}"), L"$1");
+    return finalString;
+  }
   static std::wstring composeStringSyllables(const std::wstring &str) {
     std::u32string u32str = wstring_to_u32string(str);
 
@@ -578,7 +628,7 @@ public:
         L"ይኧ",     L"ልኧ",    L"ብኧ",   L"ክኧ",   L"እን",   L"አል",   L"አስ",  L"ትኧ",
         L"አት",     L"አን",    L"አይ",   L"ይ",    L"አ",    L"እ"};
 
-    std::wstring wsteam = decomposeStringSyllables(wstr);
+    std::wstring wsteam = normalizeString(wstr);
 
     // removing suffixes
     /* std::wcout << "////// removing suffixes \n" << std::endl; */
@@ -591,11 +641,10 @@ public:
 
       wsteam = std::regex_replace(wsteam, pattern, L"");
       if (wsteam != pre_removal_string) {
-#if 1
+#ifdef ALP_STEMMER_DEBUG
         std::wcout << "[ " << decomposeStringSyllables(suffix) << " removed"
 
-                   << "] " << composeStringSyllables(wsteam) << " "
-                   << decomposeStringSyllables(wsteam) << std::endl;
+                   << "] " << composeStringSyllables(wsteam) << std::endl;
 #endif
         suffix_level--;
       }
@@ -617,7 +666,7 @@ public:
       wsteam = std::regex_replace(wsteam, pattern, L"");
 
       if (wsteam != pre_removal_string) {
-#if 1
+#ifdef ALP_STEMMER_DEBUG
         std::wcout << "[ " << decomposeStringSyllables(prefix) << " removed"
 
                    << "] " << composeStringSyllables(wsteam) << std::endl;
@@ -634,5 +683,5 @@ public:
     return composeStringSyllables(wsteam);
   }
 };
-
+} // namespace amh_nlp
 #endif
