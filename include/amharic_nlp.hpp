@@ -284,13 +284,8 @@ public:
 
   std::wstring normalizeString(const std::wstring &wstr) {
     std::wstring word;
-    for (auto ch : wstr) {
-      if (isSyllable(ch)) {
-        word += ch;
-      }
-    }
-
-    return decomposeStringSyllables(wstr);
+    word = stopword_remove(wstr);
+    return decomposeStringSyllables(word);
   }
   /**
    * @brief Checks if a character is a vowel.
@@ -381,6 +376,8 @@ public:
    */
   static bool isSyllable(const char32_t ch) {
 
+    if ((uint32_t)ch < 0x1200 || (uint32_t)(ch) > 0x137F)
+      return false;
     if (isKuter(ch) || isCombiningMark(ch) || isPunctuation(ch))
       return false;
     return true;
