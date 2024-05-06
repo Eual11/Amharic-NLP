@@ -1,15 +1,9 @@
 CFLAGS := -g -Wall -Wextra -Wpedantic -std=c++17
-all: main
-main: stopword_remover
-	g++ $(CFLAGS) ./src/main.cpp -L./lib -lstopword_remover -o ./build/$@
-
-stopword_remover:
-	g++ $(CFLAGS) -c ./src/stopword_remover.cpp -o ./bin/$@.o
-	ar rcs ./lib/lib$@.a ./bin/$@.o
-tests:
-	g++ $(CFLAGS) ./src/facet.cpp -o ./build/$@
-stemmer:
-	g++ $(CFLAGS) ./src/stemmer.cpp -o ./build/$@
-wspell:
-	g++ -std=c++17 ./src/wmain.cpp -o  ./build/e -g -Wall -Wextra -Wpedantic
+all: stemmer_example normalize_example stopword_remover_example
+stemmer_example: 
+	g++ -DALP_STEMMER_DEBUG=1 $(CFLAGS) ./examples/stemmer_example.cpp -o ./build/$@
+normalize_example:
+	g++ $(CFLAGS) ./examples/normalize_example.cpp -o  ./build/$@
+stopword_remover_example:
+	g++ $(CFLAGS) ./examples/normalize_example.cpp -o  ./build/$@
 
