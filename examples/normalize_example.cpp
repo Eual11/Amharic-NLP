@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
   std::wstring wdata_string = converter.from_bytes(data_string);
 
-  std::wstring removed = alp.stopword_remove(wdata_string);
+  std::wstring removed = alp.normalizeString(wdata_string);
   std::string removedUTF8String = converter.to_bytes(removed);
 
   std::cout << removedUTF8String << "\n";
