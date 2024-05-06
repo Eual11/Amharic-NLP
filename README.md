@@ -269,11 +269,17 @@ During the development of this library, some challenges and special cases specif
 **Accuracy of word suggestions**: Generating accurate word suggestions for stemmed words is a complex task, as it often involves analyzing the context and considering various linguistic factors. While the library attempts to provide relevant suggestions, it may not always guarantee perfect matches.
 ## Contributing
 
-Contributions are always welcome!
+We warmly welcome contributions from the community! If you'd like to contribute to the AmharicNLP library, you can do so by following these guidelines:
 
-See `contributing.md` for ways to get started.
 
-Please adhere to this project's `code of conduct`.
+
+- 🍴 Fork the repository and create a new branch from the `main` branch.
+- 🖊️ Make your desired changes or additions to the codebase.
+- ✨ Ensure that your code follows the coding conventions and best practices.
+- 📝 Write clear and concise commit messages.
+- ✔️ Test your changes to ensure they do not introduce any regressions.
+- 🚀 Submit a pull request to the `main` branch of our repository.
+
 
 
 ## Feedback
