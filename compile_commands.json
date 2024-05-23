@@ -1,0 +1,17 @@
+[
+ {
+  "directory": "C:\\Users\\Eual\\Documents\\C++\\Amharic-NLP\\Amharic-Lexical-Analysis",
+  "arguments": [
+   "g++",
+   "-g",
+   "-Wall",
+   "-Wextra",
+   "-Wpedantic",
+   "-std=c++17",
+   "./src/indexer.cpp",
+   "-o",
+   "./build/indexer"
+  ],
+  "file": "./src/indexer.cpp"
+ }
+]
