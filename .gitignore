@@ -6,3 +6,7 @@ build
 lib
 bin
 test
+.cache/clangd/index
+inverted_index.txt
+index.txt
+forward_index.txt
