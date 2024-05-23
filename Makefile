@@ -10,5 +10,7 @@ decomposing_example:
 		g++ $(CFLAGS) ./examples/decomposing_example.cpp -o  ./build/$@
 composing_example:
 		g++ $(CFLAGS) ./examples/composing_string_example.cpp -o  ./build/$@
+info:
+			g++ $(CFLAGS) ./examples/information_retrival.cpp -o  ./build/$@
 
 
